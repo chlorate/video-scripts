@@ -212,7 +212,7 @@ summary() {
 encode() {
 	echo "Source: $source"
 
-	cmd="./ffmpeg $input_param $filters_param $end_param -preset $preset -max_muxing_queue_size 400 -crf 18 -b:a $audio_bitrate \"$dest\""
+	cmd="./ffmpeg $input_param $filters_param $end_param -preset $preset -crf 18 -b:a $audio_bitrate \"$dest\""
 	eval "$cmd"
 	echo "$cmd"
 	echo
