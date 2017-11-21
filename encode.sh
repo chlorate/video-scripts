@@ -153,6 +153,21 @@ time_to_seconds() {
 	echo "$time" | awk -F ':' '{print $3, $2, $1}' | awk '{print $1 + $2*60 + $3*3600}'
 }
 
+# seconds_to_time converts a number of seconds to HH:MM:SS.ddd format.
+seconds_to_time() {
+	local seconds="$1"
+	local script='{
+		if ($1 >= 3600) {
+			printf "%d:%02d:%06.3f", int($1 / 3600), int($1 % 3600 / 60), $1 % 60
+		} else if ($1 >= 60) {
+			printf "%d:%06.3f", int($1 / 60), $1 % 60
+		} else {
+			printf "%.3f", $1
+		}
+	}'
+	echo "$seconds" | awk "$script" | sed 's/0\+$//;s/\.$//'
+}
+
 # add_filter appends a filter to a comma-separated string of filters. $1 is the
 # current string, $2 is the filter to be appended, and the output is the
 # concatenated filters.
@@ -172,16 +187,16 @@ summary() {
 	fi
 	echo "Output path:        $output_path"
 	if [[ $start != 0 ]]; then
-		echo "Start time:         $start"
+		echo "Start time:         $(seconds_to_time $start)"
 	fi
 	if [[ $end != 0 ]]; then
-		echo "End time:           $end"
+		echo "End time:           $(seconds_to_time $end)"
 	fi
 	if [[ $input_sync != 0 ]]; then
-		echo "Input sync time:    $input_sync"
+		echo "Input sync time:    $(seconds_to_time $input_sync)"
 	fi
 	if [[ $sidebar_sync != 0 ]]; then
-		echo "Sidebar sync time:  $sidebar_sync"
+		echo "Sidebar sync time:  $(seconds_to_time $sidebar_sync)"
 	fi
 	if [[ $deinterlace != 0 ]]; then
 		echo "Deinterlace:        Yes"
