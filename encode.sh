@@ -246,7 +246,7 @@ encode() {
 	args+="-crf 18 "
 	args+="-b:a $audio_bitrate"
 
-	cmd="./ffmpeg $args \"$output_path\""
+	cmd="./ffmpeg.exe $args \"$output_path\""
 	eval "$cmd"
 	echo
 }
