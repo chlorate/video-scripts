@@ -2,13 +2,13 @@
 set -o errexit -o nounset
 
 input_path=""
-output_path=""
 sidebar_path=""
+output_path=""
 
 start=0
-end=""
-input_sync=""
-sidebar_sync=""
+end=0
+input_sync=0
+sidebar_sync=0
 crop=""
 deinterlace=0
 preset="medium"
@@ -89,13 +89,13 @@ parse_args() {
 # usage displays help for this script's usage.
 usage() {
 	echo "Usage:"
-	echo "  $0 [options] input.avi"
-	echo "  $0 [options] input1.avi [options] input2.avi ..."
+	echo "  $0 [options] input.mp4"
+	echo "  $0 [options] input1.mp4 [options] input2.mp4 ..."
 	echo
 	echo "Options:"
 	echo "  -h, --help                                Help"
 	echo "  -b, --sidebar <path>                      Add sidebar video"
-	echo "  -t, --sync <input_time> <sidebar_time>    Times for syncing input and sidebar"
+	echo "  -t, --sync <input_time> <sidebar_time>    Sync input and sidebar videos"
 	echo "  -s, --start <time>                        Start time"
 	echo "  -e, --end <time>                          End time"
 	echo "  -c, --crop <left> <top> <right> <bottom>  Crop sides of input video"
@@ -110,8 +110,8 @@ usage() {
 	echo "Sidebar video:"
 	echo "  When a sidebar video is given, the input video will be right-aligned and the"
 	echo "  sidebar video will be overlaid and left-aligned. If sync times are given,"
-	echo "  then the sidebar video will be synchronized such that the points in both "
-	echo "  videos will happen at the same time."
+	echo "  then the sidebar video will be cropped or delayed such that a certain frame"
+	echo "  in both videos will play at the same time."
 	echo
 	echo "Resizing:"
 	echo "  The output video is always 16:9. If the input video is not, then its aspect"
@@ -174,13 +174,13 @@ summary() {
 	if [[ $start != 0 ]]; then
 		echo "Start time:         $start"
 	fi
-	if [[ $end ]]; then
+	if [[ $end != 0 ]]; then
 		echo "End time:           $end"
 	fi
-	if [[ $input_sync ]]; then
+	if [[ $input_sync != 0 ]]; then
 		echo "Input sync time:    $input_sync"
 	fi
-	if [[ $sidebar_sync ]]; then
+	if [[ $sidebar_sync != 0 ]]; then
 		echo "Sidebar sync time:  $sidebar_sync"
 	fi
 	if [[ $deinterlace != 0 ]]; then
@@ -190,7 +190,7 @@ summary() {
 		echo "Crop:               $crop"
 	fi
 	echo "Preset:             $preset"
-	echo "Resolution:         $width x $height"
+	echo "Resolution:         $width × $height"
 	echo "Audio bitrate:      $audio_bitrate"
 	echo
 }
@@ -203,7 +203,7 @@ encode() {
 	if [[ $start != 0 ]]; then
 		args+="-ss $start "
 	fi
-	if [[ $end ]]; then
+	if [[ $end != 0 ]]; then
 		args+="-to $end "
 	fi
 	args+="-i \"$input_path\" "
@@ -229,7 +229,7 @@ encode() {
 		local setpts="setpts=PTS-STARTPTS"
 		filters=$(add_filter "$setpts" "$filters")
 
-		if [[ $input_sync && $sidebar_sync ]]; then
+		if [[ $input_sync != 0 || $sidebar_sync != 0 ]]; then
 			args+="-ss $(awk "BEGIN { print $sidebar_sync - ($input_sync - $start)}") "
 		fi
 		args+="-i $sidebar_path "
