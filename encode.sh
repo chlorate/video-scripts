@@ -12,6 +12,7 @@ sidebar_sync=""
 crop=""
 deinterlace=0
 preset="medium"
+crf=18
 audio_bitrate="320k"
 
 width=852
@@ -243,7 +244,7 @@ encode() {
 	fi
 
 	args+="-preset $preset "
-	args+="-crf 18 "
+	args+="-crf $crf "
 	args+="-b:a $audio_bitrate"
 
 	cmd="./ffmpeg.exe $args \"$output_path\""
