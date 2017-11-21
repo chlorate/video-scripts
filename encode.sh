@@ -192,10 +192,10 @@ summary() {
 	if [[ $end != 0 ]]; then
 		echo "End time:           $(seconds_to_time $end)"
 	fi
-	if [[ $input_sync != 0 ]]; then
+	if [[ $sidebar_path && $input_sync != 0 ]]; then
 		echo "Input sync time:    $(seconds_to_time $input_sync)"
 	fi
-	if [[ $sidebar_sync != 0 ]]; then
+	if [[ $sidebar_path && $sidebar_sync != 0 ]]; then
 		echo "Sidebar sync time:  $(seconds_to_time $sidebar_sync)"
 	fi
 	if [[ $deinterlace != 0 ]]; then
