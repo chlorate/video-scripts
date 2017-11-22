@@ -151,7 +151,7 @@ validate_time() {
 # number of seconds.
 time_to_seconds() {
 	local time="$1"
-	echo "$time" | awk -F ':' '{print $3, $2, $1}' | awk '{print $1 + $2*60 + $3*3600}'
+	echo "$time" | awk --field-separator ":" '{print $3, $2, $1}' | awk '{print $1 + $2*60 + $3*3600}'
 }
 
 # seconds_to_time converts a number of seconds to HH:MM:SS.ddd format.
@@ -187,7 +187,9 @@ pre_encode() {
 	else
 		# Extract video height from ffmpeg's output. Need to ignore hex values
 		# that start with "0x".
-		height=$("$ffmpeg_path" -i "$input_path" 2>&1 | grep --only-matching "[0-9]\+x[0-9]\+" | awk --field-separator "x" '$1 > 0 { print $2; exit }')
+		height=$("$ffmpeg_path" -i "$input_path" 2>&1 | \
+			grep --only-matching "[0-9]\+x[0-9]\+" | \
+			awk --field-separator "x" '$1 > 0 { print $2; exit }')
 	fi
 
 	# Round width down to nearest multiple of 4.
