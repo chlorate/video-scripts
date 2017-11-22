@@ -1,6 +1,8 @@
 #!/bin/bash
 set -o errexit -o nounset
 
+ffmpeg_path="./ffmpeg.exe"
+
 input_path=""
 sidebar_path=""
 output_path=""
@@ -11,12 +13,13 @@ input_sync=0
 sidebar_sync=0
 crop=""
 deinterlace=0
+resize=0
 preset="medium"
 crf=18
 audio_bitrate="320k"
 
-width=852
-height=480
+width=0
+height=0
 
 # parse_args parses the command line arguments.
 parse_args() {
@@ -59,10 +62,8 @@ parse_args() {
 				shift
 				;;
 			-r|--resize)
-				# Width is rounded to the nearest multiple of 4.
 				validate_int "$2"
-				width=$(echo "$2" | awk '{print int($1 * 16/9 / 4) * 4}')
-				height="$2"
+				resize="$2"
 				shift 2
 				;;
 			-p|--preset)
@@ -72,7 +73,7 @@ parse_args() {
 			*)
 				has_input=1
 				input_path="$1"
-				output_path="$(basename "${input_path%.*}").$preset.${height}p.mp4"
+				pre_encode
 				summary
 				encode
 				shift
@@ -179,6 +180,22 @@ add_filter() {
 	fi
 }
 
+# pre_encode determines the output video dimensions and path.
+pre_encode() {
+	if [[ $resize != 0 ]]; then
+		height="$resize"
+	else
+		# Extract video height from ffmpeg's output. Need to ignore hex values
+		# that start with "0x".
+		height=$("$ffmpeg_path" -i "$input_path" 2>&1 | grep --only-matching "[0-9]\+x[0-9]\+" | awk --field-separator "x" '$1 > 0 { print $2; exit }')
+	fi
+
+	# Round width down to nearest multiple of 4.
+	width=$(echo "$height" | awk '{print int($1 * 16/9 / 4) * 4}')
+
+	output_path="$(basename "${input_path%.*}").$preset.${height}p.mp4"
+}
+
 # summary prints out a summary of the current settings.
 summary() {
 	echo "Input path:         $input_path"
@@ -262,7 +279,7 @@ encode() {
 	args+="-crf $crf "
 	args+="-b:a $audio_bitrate"
 
-	cmd="./ffmpeg.exe $args \"$output_path\""
+	cmd="$ffmpeg_path $args \"$output_path\""
 	eval "$cmd"
 	echo
 }
