@@ -291,4 +291,4 @@ encode() {
 	echo
 }
 
-parse_args $@
+parse_args "$@"
