@@ -14,7 +14,7 @@ sidebar_sync=0
 crop=""
 deinterlace=0
 resize=0
-preset="medium"
+preset="veryfast"
 crf=18
 audio_bitrate="320k"
 
@@ -102,7 +102,7 @@ usage() {
 	echo "  -c, --crop <left> <top> <right> <bottom>  Crop sides of input video"
 	echo "  -d, --deinterlace                         Deinterlace input video"
 	echo "  -r, --resize <height>                     Resize to certain height"
-	echo "  -p, --preset <preset>                     x264 preset (default: medium)"
+	echo "  -p, --preset <preset>                     x264 preset (default: veryfast)"
 	echo
 	echo "Time format:"
 	echo "  Times must be in HH:MM:SS.ddd format. Only seconds are required."
