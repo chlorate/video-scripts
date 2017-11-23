@@ -182,6 +182,11 @@ add_filter() {
 
 # pre_encode determines the output video dimensions and path.
 pre_encode() {
+	if [[ ! -f "$input_path" ]]; then
+		echo "File not found: $input_path"
+		exit 1
+	fi
+
 	if [[ $resize != 0 ]]; then
 		height="$resize"
 	else
