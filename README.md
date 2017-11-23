@@ -7,6 +7,7 @@ Shell scripts for editing videos with ffmpeg.
 * Resize
 * Deinterlace
 * Overlay a sidebar video (optionally synchronized with input video)
+* Concatenate
 
 ## Getting started
 
@@ -71,4 +72,10 @@ needed so that both videos start at 0:05.
 
 ```shell
 ./encode.sh -b sidebar.mp4 -t 5 10 input.mp4
+```
+
+Concatenate multiple videos into one video:
+
+```shell
+./concat.sh input1.mp4 input2.mp4 input3.mp4
 ```
