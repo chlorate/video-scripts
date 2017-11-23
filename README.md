@@ -19,7 +19,8 @@ On Windows:
   [Git](https://git-scm.com/downloads) installs Bash and has Windows Explorer
   integration. The Windows Subsystem for Linux on Windows 10 also works.
 
-Run `./encode.sh -h` for a list of options and other documentation.
+Run `./encode.sh -h` or `./concat.sh -h` for a list of options and other
+documentation.
 
 ## Examples
 
