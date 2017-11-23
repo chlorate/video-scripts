@@ -15,7 +15,7 @@ deinterlace=0
 resize=0
 preset="veryfast"
 crf=18
-audio_bitrate="320k"
+audio_bitrate="320k" # TODO: Test lower values. Originally set high to fix glitchy audio output.
 
 width=0
 height=0
