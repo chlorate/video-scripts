@@ -1,8 +1,7 @@
 #!/bin/bash
 set -o errexit -o nounset
 
-ffmpeg_path="./ffmpeg.exe"
-
+ffmpeg_path=""
 input_path=""
 sidebar_path=""
 output_path=""
@@ -20,6 +19,18 @@ audio_bitrate="320k"
 
 width=0
 height=0
+
+# find_ffmpeg determines the path to ffmpeg.
+find_ffmpeg() {
+	if [[ -x "./ffmpeg.exe" ]]; then
+		ffmpeg_path="./ffmpeg.exe"
+	elif command -v ffmpeg > /dev/null 2>&1; then
+		ffmpeg_path="ffmpeg"
+	else
+		echo "Cannot find ffmpeg executable"
+		exit 1
+	fi
+}
 
 # parse_args parses the command line arguments.
 parse_args() {
@@ -291,4 +302,5 @@ encode() {
 	echo
 }
 
+find_ffmpeg
 parse_args "$@"
