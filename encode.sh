@@ -13,8 +13,9 @@ sidebar_sync=0
 crop=""
 deinterlace=0
 resize=0
+extension="mp4"
 preset="veryfast"
-crf=18
+crf=0
 audio_bitrate="320k" # TODO: Test lower values. Originally set high to fix glitchy audio output.
 
 width=0
@@ -77,6 +78,10 @@ parse_args() {
 				resize="$2"
 				shift 2
 				;;
+			-w|--webm)
+				extension="webm"
+				shift
+				;;
 			-p|--preset)
 				preset="$2"
 				shift 2
@@ -84,7 +89,13 @@ parse_args() {
 			*)
 				has_input=1
 				input_path="$1"
-				pre_encode
+				if [[ ! -f "$input_path" ]]; then
+					echo "File not found: $input_path"
+					exit 1
+				fi
+				set_dimensions
+				set_crf
+				set_output_path
 				summary
 				encode
 				shift
@@ -113,7 +124,8 @@ usage() {
 	echo "  -c, --crop <left> <top> <right> <bottom>  Crop sides of input video"
 	echo "  -d, --deinterlace                         Deinterlace input video"
 	echo "  -r, --resize <height>                     Resize to certain height"
-	echo "  -p, --preset <preset>                     x264 preset (default: veryfast)"
+	echo "  -w, --webm                                Output webm (VP9) instead of mp4 (H.264)"
+	echo "  -p, --preset <preset>                     x264 preset for mp4 (default: veryfast)"
 	echo
 	echo "Time format:"
 	echo "  Times must be in HH:MM:SS.ddd format. Only seconds are required."
@@ -191,13 +203,10 @@ add_filter() {
 	fi
 }
 
-# pre_encode determines the output video dimensions and path.
-pre_encode() {
-	if [[ ! -f "$input_path" ]]; then
-		echo "File not found: $input_path"
-		exit 1
-	fi
-
+# set_dimensions sets the dimensions of the output video. 16:9 aspect ratio will
+# be used. If the resize argument was given, then the dimensions will be based
+# on that. Otherwise, the same dimensions of the input video will be used.
+set_dimensions() {
 	if [[ $resize != 0 ]]; then
 		height="$resize"
 	else
@@ -210,8 +219,38 @@ pre_encode() {
 
 	# Round width down to nearest multiple of 4.
 	width=$(echo "$height" | awk '{print int($1 * 16/9 / 4) * 4}')
+}
 
-	output_path="$(basename "${input_path%.*}").$preset.${height}p.mp4"
+# set_crf sets the CRF value used for encoding based on the output format and
+# video height.
+set_crf() {
+	if [[ $extension == "mp4" ]]; then
+		crf=18
+	elif [[ $extension == "webm" ]]; then
+		# CRF values taken from:
+		# https://developers.google.com/media/vp9/settings/vod/#recommended_settings
+		if [[ $height -gt 1440 ]]; then
+			crf=15
+		elif [[ $height -gt 1080 ]]; then
+			crf=24
+		elif [[ $height -gt 720 ]]; then
+			crf=31
+		elif [[ $height -gt 480 ]]; then
+			crf=32
+		else
+			crf=33
+		fi
+	fi
+}
+
+# set_output_path sets the path of the output video based on the input path and
+# current settings.
+set_output_path() {
+	output_path="$(basename "${input_path%.*}")."
+	if [[ $extension == "mp4" ]]; then
+		output_path+="$preset."
+	fi
+	output_path+="${height}p.${extension}"
 }
 
 # summary prints out a summary of the current settings.
@@ -239,7 +278,10 @@ summary() {
 	if [[ $crop ]]; then
 		echo "Crop:               $crop"
 	fi
-	echo "Preset:             $preset"
+	echo "CRF:                $crf"
+	if [[ $extension == "mp4" ]]; then
+		echo "Preset:             $preset"
+	fi
 	echo "Resolution:         $width × $height"
 	echo "Audio bitrate:      $audio_bitrate"
 	echo
@@ -257,6 +299,10 @@ encode() {
 		args+="-to $end "
 	fi
 	args+="-i \"$input_path\" "
+	if [[ $extension == "webm" ]]; then
+		# Doesn't seem to use multiple threads by default.
+		args+="-c:v libvpx-vp9 -threads 0 "
+	fi
 
 	if [[ $deinterlace != 0 ]]; then
 		filters=$(add_filter "$filters" "yadif=1,mcdeint=parity=tff:qp=10")
@@ -293,7 +339,11 @@ encode() {
 		args+="-vf \"$filters\" "
 	fi
 
-	args+="-preset $preset "
+	if [[ $extension == "mp4" ]]; then
+		args+="-preset $preset "
+	elif [[ $extension == "webm" ]]; then
+		args+="-b:v 0 " # Enables Constant Quality mode.
+	fi
 	args+="-crf $crf "
 	args+="-b:a $audio_bitrate"
 
